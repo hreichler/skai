@@ -1,0 +1,4 @@
+# Helm values consumed at deploy time by VoiceRun templating (`vr render` / `vr deploy`).
+# See docs/architecture/3-tech-stack-table.md — Deepgram Flux is the chosen STT model.
+
+sttModel: deepgram-flux
