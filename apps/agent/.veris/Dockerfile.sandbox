@@ -1,0 +1,27 @@
+# Story 2.6 — Veris AI Reliability Harness image (AC7).
+# Extends the Veris gVisor sandbox base with the agent package.
+# NOTE: build context is `apps/agent/` (not the repo root) because
+# `veris env push` is invoked from inside apps/agent/. Relative COPY
+# paths below are resolved against that context.
+ARG GVISOR_BASE=us-central1-docker.pkg.dev/veris-ai-prod/veris-sandbox/veris-gvisor:latest
+FROM ${GVISOR_BASE}
+
+# AC8 — requirements.txt stays at exactly one line (`primfunctions`)
+# per docs/epics.md#Build-Constraints. No fastapi / flask / uvicorn /
+# aiohttp / httpx — the Veris HTTP adapter uses stdlib http.server.
+COPY requirements.txt /agent/
+RUN pip install --no-cache-dir -r /agent/requirements.txt
+
+# Only the files the adapter's entry point needs. Do NOT copy:
+#   - .voicerun/ (VoiceRun deployment chart — Veris ignores it)
+#   - .env.local (secrets come from `veris env vars set --secret`, AC4)
+#   - debugger-session-* / .debug-script-* / push-*.log / *.err
+#     (local debugger artifacts — excluded by .dockerignore anyway, but
+#      the COPY whitelist here is the true defence).
+COPY handler.py tools.py config.py veris_adapter.py veris_gemini_shim.py /agent/
+
+# AC7 — Veris's entrypoint contract mandates `WORKDIR /app` regardless
+# of where the code actually lives. The agent module is resolved via
+# `agent.code_path: /agent` in veris.yaml (Veris prepends it to
+# PYTHONPATH at run time).
+WORKDIR /app

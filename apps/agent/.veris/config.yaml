@@ -1,0 +1,6 @@
+profiles:
+  default:
+    targets:
+      skai-agent:
+        config_synced_at: '2026-04-18T20:32:06.187695Z'
+        environment_id: env_0rappwy520s7g89640520

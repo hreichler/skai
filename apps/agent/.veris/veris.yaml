@@ -1,0 +1,59 @@
+# Story 2.6 — Veris AI Reliability Harness configuration.
+# See _bmad-output/implementation-artifacts/2-6-veris-ai-reliability-harness.md
+# (AC3, AC4, AC5, AC7, AC8).
+#
+# NOTE: AC3 quotes the older `actor.channels` + `actor.config` schema from
+# docs.veris.ai/walkthrough. veris-cli v2.25.0 replaced that with
+# `persona.modality` + `persona.config`. Functionality preserved verbatim
+# (HTTP POST /chat, session_id field, MAX_TURNS=10, Mariana Tek DNS
+# passthrough). Deviation documented in Completion Notes.
+version: "1.0"
+
+skai-agent:
+  # AC3 — route reseat.sandbox.marianatek.com straight to the real MT
+  # sandbox (NOT a Veris-provided mock). The whole point of the run is
+  # that personas exercise check_payment_options → list_class_sessions
+  # → create_reservation against the same API surface as live calls
+  # (same policy as Stories 1.3 / 1.4 / 2.1). Reservations created
+  # during Veris runs PERSIST against MT_DEMO_USER_ID — repeated full
+  # suite runs may exhaust availability (see Story 1.4 Task 3.6).
+  services:
+    - name: mariana-tek
+      dns_aliases:
+        - reseat.sandbox.marianatek.com
+
+  # AC3 — actor/persona drives the agent over plain HTTP. The agent
+  # side (veris_adapter.py / handler.py) reads `message` + `session_id`
+  # from the request body and replies with `response`.
+  persona:
+    modality:
+      type: http
+      url: http://localhost:8008/chat
+      method: POST
+      headers:
+        Content-Type: application/json
+      request:
+        message_field: message
+        session_field: session_id
+      response:
+        type: json
+        message_field: response
+
+    # AC3 — MAX_TURNS=10. Happy path finishes in 3–4 turns (Story 1.4
+    # ran 3); 10 gives adversarial personas headroom to re-prompt
+    # without the scenario auto-failing. MAX_TURNS=1 would be for
+    # one-shot agents and is WRONG for our multi-turn booking flow.
+    config:
+      MAX_TURNS: "10"
+
+  # AC5 / AC7 — veris_adapter.py runs in-container and drives the
+  # unchanged handler.py async generator. `code_path: /agent` tells
+  # Veris to prepend /agent to PYTHONPATH so `python -m veris_adapter`
+  # resolves. Secrets (MT_BASE_URL, MT_ACCESS_TOKEN, MT_DEMO_USER_ID)
+  # are NOT hardcoded here — they come from `veris env vars set
+  # --secret` (AC4) and land in os.environ at container start.
+  agent:
+    name: Barry's Chelsea Devin
+    code_path: /agent
+    entry_point: python -m veris_adapter
+    port: 8008

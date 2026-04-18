@@ -1,0 +1,39 @@
+# Story 2.6 AC2.3 — keep the Veris build context lean and never ship
+# secrets / local debugger artifacts into the sandbox image.
+
+# Scaffolded defaults (veris env create).
+.git
+.venv
+__pycache__
+node_modules
+.env
+.env.*
+*.egg-info
+dist
+build
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# VoiceRun deployment chart — Veris doesn't need it.
+.voicerun/
+.voicerun/**
+
+# Story 1.2 – 2.1 debugger captures — local-only, may contain transcripts.
+debugger-session-*.json
+debugger-session-*.jsonl
+debugger-stderr-*.log
+.debug-script-*.json
+session-*-events.json
+push-*.log
+debug-*.log
+debug-*.err
+
+# Veris report artifacts (AC18) — regenerated every run; never ship
+# previous reports into a new image.
+veris-report-*.html
+
+# Nested Veris state — shipping `.veris/config.yaml` or Veris logs back
+# into the image is a no-op at best and a footgun at worst.
+.veris/config.yaml
+.veris/*.log
