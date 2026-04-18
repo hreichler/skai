@@ -34,3 +34,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# BMAD + planning docs (local only)
+_bmad/
+_bmad-output/
+docs/
