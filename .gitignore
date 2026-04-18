@@ -39,3 +39,4 @@ Thumbs.db
 _bmad/
 _bmad-output/
 docs/
+.cursor/
